@@ -1,7 +1,6 @@
 
 import streamlit as st
 import pandas as pd
-
 import base64, os
 
 def img_to_data_uri(path: str) -> str:
