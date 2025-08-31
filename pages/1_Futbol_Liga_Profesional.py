@@ -6,6 +6,8 @@ from pathlib import Path
 import base64, os
 from pathlib import Path
 
+st.set_page_config(page_title="Liga Profesional", layout="wide")
+
 if st.button("🔄 Refrescar datos"):
     st.cache_data.clear()
     st.rerun()
