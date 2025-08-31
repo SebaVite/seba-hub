@@ -42,7 +42,7 @@ def compute_standings(matches, teams):
 
 teams, matches = load_data()
 
-st.markdown("# 🇦🇷 Liga Profesional")
+st.markdown("![bandera](https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg)  # Liga Profesional")
 
 tabs = st.tabs(["Tabla", "Fixture", "Campeones", "Estadísticas", "Historia de Clubes", "Simuladores"])
 
