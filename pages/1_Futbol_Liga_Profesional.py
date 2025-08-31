@@ -90,39 +90,39 @@ tabs = st.tabs(["Tabla", "Fixture", "Campeones", "Estadísticas", "Historia de C
 with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
 
-    # 1) Cargar tabla base
-    tabla = compute_standings(matches, teams).copy()  # debe tener 'escudo_url' con rutas tipo assets/logos/river.png
+    tabla = compute_standings(matches, teams).copy()
 
-    # --- DEBUG mínimo y vista previa de escudos (para confirmar que se leen) ---
+    # --- DEBUG mínimo y vista previa de escudos (confirmar que se leen) ---
     st.caption("Vista previa de escudos (debug rápido)")
     c1, c2, c3, c4 = st.columns(4)
     try:
-        c1.image(resolve_path("assets/logos/river.png"), width=48, caption="river.png")
+        c1.image(str(resolve_path("assets/logos/river.png")), width=48, caption="river.png")
     except Exception as e:
         c1.write(f"river.png ❌ {e}")
     try:
-        c2.image(resolve_path("assets/logos/boca.png"), width=48, caption="boca.png")
+        c2.image(str(resolve_path("assets/logos/boca.png")), width=48, caption="boca.png")
     except Exception as e:
         c2.write(f"boca.png ❌ {e}")
     try:
-        c3.image(resolve_path("assets/logos/independiente.png"), width=48, caption="independiente.png")
+        c3.image(str(resolve_path("assets/logos/independiente.png")), width=48, caption="independiente.png")
     except Exception as e:
         c3.write(f"independiente.png ❌ {e}")
     try:
-        c4.image(resolve_path("assets/logos/racing.png"), width=48, caption="racing.png")
+        c4.image(str(resolve_path("assets/logos/racing.png")), width=48, caption="racing.png")
     except Exception as e:
         c4.write(f"racing.png ❌ {e}")
 
     st.divider()
 
-    # 2) Convertir cada ruta en <img src="..."> (si es http la usa tal cual, si es local la embebe en base64)
+    # 2) Convertir rutas en <img>
     tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
         lambda p: f'<img src="{img_src(p)}" height="24">' if p else "—"
     )
 
-    # 3) Renderizar tabla con HTML (permite imágenes)
+    # 3) Renderizar tabla con HTML
     cols = ["pos","nombre","Escudo","pj","pg","pe","pp","gf","ga","dg","pts"]
     st.markdown(tabla[cols].to_html(escape=False, index=False), unsafe_allow_html=True)
+
 
 
 with tabs[1]:
