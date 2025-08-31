@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 
-st.markdown("# 🇦🇷 Liga Profesional")
+st.set_page_config(page_title="Liga Profesional", layout="wide")
 
 @st.cache_data
 def load_data():
@@ -43,6 +43,7 @@ def compute_standings(matches, teams):
 teams, matches = load_data()
 
 st.markdown("# 🇦🇷 Liga Profesional")
+
 tabs = st.tabs(["Tabla", "Fixture", "Campeones", "Estadísticas", "Historia de Clubes", "Simuladores"])
 
 with tabs[0]:
