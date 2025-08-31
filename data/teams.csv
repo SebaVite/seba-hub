@@ -1,5 +1,5 @@
 id,nombre,escudo_url
-1,River,assets/logos/River Plate.png
-2,Boca,assets/logos/Boca Jrs.png
-3,Independiente,assets/logos/Independiente.png
-4,Racing,assets/logos/racing.png
+1,River,https://raw.githubusercontent.com/SebaVite/seba-hub/main/assets/logos/River Plate.png
+2,Boca,https://raw.githubusercontent.com/SebaVite/seba-hub/main/assets/logos/Boca Jrs.png
+3,Independiente,https://raw.githubusercontent.com/SebaVite/seba-hub/main/assets/logos/Independiente.png
+4,Racing,https://raw.githubusercontent.com/SebaVite/seba-hub/main/assets/logos/racing.png
