@@ -70,16 +70,16 @@ tabs = st.tabs(["Tabla", "Fixture", "Campeones", "Estadísticas", "Historia de C
 
 with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
-    tabla = compute_standings(matches, teams).copy()  # trae 'escudo_url'
+    tabla = compute_standings(matches, teams).copy()
 
-    # Convertir la ruta del escudo a <img> para que se vea siempre
-    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(lambda p: f'<img src="{p}" height="24">')
+    # Embebemos los escudos como data URI (no dependemos de URLs externas)
+    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
+        lambda p: f'<img src="{img_to_data_uri(p)}" height="24">' if p else ""
+    )
 
-    # Orden de columnas para mostrar
     cols = ["pos","nombre","Escudo","pj","pg","pe","pp","gf","ga","dg","pts"]
-
-    # Render HTML (permite imágenes)
     st.markdown(tabla[cols].to_html(escape=False, index=False), unsafe_allow_html=True)
+
 
 with tabs[1]:
     st.subheader("Fixture")
