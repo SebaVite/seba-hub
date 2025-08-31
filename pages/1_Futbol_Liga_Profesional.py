@@ -103,7 +103,7 @@ with tabs[0]:
     tabla = compute_standings(matches, teams).copy()
 
    # Escudo + nombre juntos (estilo Promiedos)
-tabla["Equipo"] = tabla.apply(
+    tabla["Equipo"] = tabla.apply(
     lambda r: f'''
       <div style="display:flex; align-items:center; gap:8px;">
         <img src="{img_src(r["escudo_url"])}" height="18">
@@ -113,9 +113,9 @@ tabla["Equipo"] = tabla.apply(
     axis=1
 )
 
-# Render con 'Equipo' (y ocultamos 'nombre' y 'escudo_url' de la vista)
-cols = ["pos", "Equipo", "pj", "pg", "pe", "pp", "gf", "ga", "dg", "pts"]
-st.markdown(
+    # Render con 'Equipo' (y ocultamos 'nombre' y 'escudo_url' de la vista)
+    cols = ["pos", "Equipo", "pj", "pg", "pe", "pp", "gf", "ga", "dg", "pts"]
+    st.markdown(
     tabla[cols].to_html(escape=False, index=False),
     unsafe_allow_html=True
 )
