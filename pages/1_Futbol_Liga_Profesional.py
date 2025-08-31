@@ -2,18 +2,27 @@
 import streamlit as st
 import pandas as pd
 import base64, os
+from pathlib import Path
+
+# Base del repo (subí una carpeta desde /pages a la raíz)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+def resolve_path(p: str) -> Path:
+    """Devuelve ruta absoluta robusta a partir de una ruta relativa dentro del repo."""
+    pp = Path(p)
+    return pp if pp.is_absolute() else (BASE_DIR / pp)
 
 def img_to_data_uri(path: str) -> str:
-    """Lee un PNG/JPG local y devuelve un data URI para <img src="...">"""
+    """Lee un PNG/JPG local y devuelve un data URI para <img src="...">."""
     try:
-        with open(path, "rb") as f:
+        full = resolve_path(path)
+        with open(full, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("utf-8")
-        ext = os.path.splitext(path)[1].lower()
+        ext = full.suffix.lower()
         mime = "image/png" if ext == ".png" else "image/jpeg"
         return f"data:{mime};base64,{b64}"
     except Exception:
-        return ""  # si falta el archivo, queda vacío
-
+        return ""  # si falta, devolvemos vacío
 
 st.set_page_config(page_title="Liga Profesional", layout="wide")
 
@@ -70,13 +79,21 @@ tabs = st.tabs(["Tabla", "Fixture", "Campeones", "Estadísticas", "Historia de C
 
 with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
-    tabla = compute_standings(matches, teams).copy()
+    tabla = compute_standings(matches, teams).copy()  # trae 'escudo_url'
 
-    # Embebemos los escudos como data URI (no dependemos de URLs externas)
-    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
-        lambda p: f'<img src="{img_to_data_uri(p)}" height="24">' if p else ""
-    )
+    # --- DEBUG visible para verificar que existan los archivos en el server ---
+    st.caption("Debug de escudos (se oculta después de validar)")
+    logos_dir = resolve_path("assets/logos")
+    st.write("Directorio de logos:", str(logos_dir))
+    st.write("Existe directorio:", logos_dir.exists())
+    st.write("Archivos encontrados:", [p.name for p in logos_dir.glob("*")])
 
+    # --- Embebemos como data URI; si no existe el archivo, mostramos un placeholder ---
+    def escudo_html(p: str) -> str:
+        data_uri = img_to_data_uri(p)
+        return f'<img src="{data_uri}" height="24">' if data_uri else "⚽"
+
+    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(escudo_html)
     cols = ["pos","nombre","Escudo","pj","pg","pe","pp","gf","ga","dg","pts"]
     st.markdown(tabla[cols].to_html(escape=False, index=False), unsafe_allow_html=True)
 
