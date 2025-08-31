@@ -10,23 +10,30 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent  # raíz del repo
 
 def resolve_path(p: str) -> Path:
-    # normaliza rutas tipo 'assets/logos/river.png'
-    pp = Path(p.strip()).as_posix().lstrip("/")  # quita / inicial por las dudas
+    pp = Path(p.strip()).as_posix().lstrip("/")  # normaliza
     return BASE_DIR / pp
 
-def img_to_data_uri(path: str) -> str:
-    """Devuelve data URI o levanta diagnóstico si falla."""
+def local_img_to_data_uri(path: str) -> str:
+    """Convierte un archivo local (PNG/JPG) a data URI."""
     full = resolve_path(path)
-    try:
-        with open(full, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode("utf-8")
-        mime = "image/png" if full.suffix.lower()==".png" else "image/jpeg"
-        return f"data:{mime};base64,{b64}"
-    except Exception as e:
-        # diagnóstico visible en la app para detectar el archivo que falla
-        st.write("⚠️ No pude leer:", str(full), "| Existe:", full.exists(), "| Error:", repr(e))
-        return ""
+    with open(full, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("utf-8")
+    mime = "image/png" if full.suffix.lower()==".png" else "image/jpeg"
+    return f"data:{mime};base64,{b64}"
 
+def img_src(p: str) -> str:
+    """
+    Si p es URL (http/https) -> la devolvemos tal cual.
+    Si p es ruta local -> devolvemos data URI embebida.
+    """
+    p = (p or "").strip()
+    if p.startswith("http://") or p.startswith("https://"):
+        return p
+    try:
+        return local_img_to_data_uri(p)
+    except Exception as e:
+        st.write("⚠️ No pude leer archivo local:", resolve_path(p), "| Error:", repr(e))
+        return ""
 st.set_page_config(page_title="Liga Profesional", layout="wide")
 
 @st.cache_data
@@ -84,14 +91,14 @@ with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
     tabla = compute_standings(matches, teams).copy()
 
-    # Embebe cada escudo; si falla, verás una línea de diagnóstico arriba
-    def escudo_html(p: str) -> str:
-        uri = img_to_data_uri(p)
-        return f'<img src="{uri}" height="24">' if uri else "—"
+    # Construye el <img src="..."> usando URL o data URI según corresponda
+    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
+        lambda p: f'<img src="{img_src(p)}" height="24">' if p else "—"
+    )
 
-    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(escudo_html)
     cols = ["pos","nombre","Escudo","pj","pg","pe","pp","gf","ga","dg","pts"]
     st.markdown(tabla[cols].to_html(escape=False, index=False), unsafe_allow_html=True)
+
 
 with tabs[1]:
     st.subheader("Fixture")
