@@ -102,24 +102,23 @@ with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
     tabla = compute_standings(matches, teams).copy()
 
-   # Escudo + nombre juntos (estilo Promiedos)
+    # Escudo + nombre juntos (una sola línea de HTML para evitar \n)
     tabla["Equipo"] = tabla.apply(
-    lambda r: f'''
-      <div style="display:flex; align-items:center; gap:8px;">
-        <img src="{img_src(r["escudo_url"])}" height="18">
-        <span>{r["nombre"]}</span>
-      </div>
-    ''',
-    axis=1
-)
+        lambda r: (
+            f'<div style="display:flex;align-items:center;gap:8px;">'
+            f'<img src="{img_src(r["escudo_url"])}" height="18">'
+            f'<span>{r["nombre"]}</span>'
+            f'</div>'
+        ),
+        axis=1
+    )
 
-    # Render con 'Equipo' (y ocultamos 'nombre' y 'escudo_url' de la vista)
+    # Render con 'Equipo' (no mostramos 'nombre' ni 'escudo_url')
     cols = ["pos", "Equipo", "pj", "pg", "pe", "pp", "gf", "ga", "dg", "pts"]
     st.markdown(
-    tabla[cols].to_html(escape=False, index=False),
-    unsafe_allow_html=True
-)
-
+        tabla[cols].to_html(escape=False, index=False),
+        unsafe_allow_html=True
+    )
 
 with tabs[1]:
     st.subheader("Fixture")
