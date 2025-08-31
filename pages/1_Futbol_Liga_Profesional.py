@@ -3,9 +3,12 @@ import streamlit as st
 import pandas as pd
 import base64, os
 from pathlib import Path
-
 import base64, os
 from pathlib import Path
+
+if st.button("🔄 Refrescar datos"):
+    st.cache_data.clear()
+    st.experimental_rerun()
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # raíz del repo
 
