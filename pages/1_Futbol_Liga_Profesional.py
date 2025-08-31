@@ -2,19 +2,21 @@ import streamlit as st
 import pandas as pd
 import base64, os
 from pathlib import Path
-import base64, os
-from pathlib import Path
 
+# ── Config (debe ser la primera llamada st.*) ───────────────────────────────────
 st.set_page_config(page_title="Liga Profesional", layout="wide")
 
+# Botón para limpiar caché y recargar
 if st.button("🔄 Refrescar datos"):
     st.cache_data.clear()
     st.rerun()
 
+# ── Helpers de paths / imágenes ─────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent  # raíz del repo
 
 def resolve_path(p: str) -> Path:
-    pp = Path(p.strip()).as_posix().lstrip("/")  # normaliza
+    """Convierte rutas relativas del repo a absoluta robusta."""
+    pp = Path(p.strip()).as_posix().lstrip("/")  # normaliza y quita "/" inicial
     return BASE_DIR / pp
 
 def local_img_to_data_uri(path: str) -> str:
@@ -38,8 +40,8 @@ def img_src(p: str) -> str:
     except Exception as e:
         st.write("⚠️ No pude leer archivo local:", resolve_path(p), "| Error:", repr(e))
         return ""
-st.set_page_config(page_title="Liga Profesional", layout="wide")
 
+# ── Datos ───────────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
     teams = pd.read_csv("data/teams.csv")
@@ -47,7 +49,7 @@ def load_data():
     return teams, matches
 
 def compute_standings(matches, teams):
-    m = matches[matches["status"]=="finished"].copy()
+    m = matches[matches["status"] == "finished"].copy()
 
     # registros local
     home = m[["home_id","home_goals","away_goals"]].rename(
@@ -59,25 +61,30 @@ def compute_standings(matches, teams):
     )
 
     for df in (home, away):
-        df["pj"]=1
-        df["pg"]=(df["gf"]>df["ga"]).astype(int)
-        df["pe"]=(df["gf"]==df["ga"]).astype(int)
-        df["pp"]=(df["gf"]<df["ga"]).astype(int)
-        df["pts"]=df["pg"]*3 + df["pe"]
+        df["pj"] = 1
+        df["pg"] = (df["gf"] > df["ga"]).astype(int)
+        df["pe"] = (df["gf"] == df["ga"]).astype(int)
+        df["pp"] = (df["gf"] < df["ga"]).astype(int)
+        df["pts"] = df["pg"]*3 + df["pe"]
 
-    rows = pd.concat([home,away], ignore_index=True)
+    rows = pd.concat([home, away], ignore_index=True)
     agg = rows.groupby("team_id", as_index=False).sum(numeric_only=True)
-    agg["dg"]=agg["gf"]-agg["ga"]
+    agg["dg"] = agg["gf"] - agg["ga"]
 
     tabla = teams.merge(agg, left_on="id", right_on="team_id", how="left").fillna(0)
     for c in ["pj","pg","pe","pp","gf","ga","dg","pts"]:
-        tabla[c]=tabla[c].astype(int)
-    tabla = tabla.sort_values(["pts","dg","gf","nombre"], ascending=[False,False,False,True]).reset_index(drop=True)
-    tabla.insert(0,"pos", tabla.index+1)
+        tabla[c] = tabla[c].astype(int)
+
+    tabla = (
+        tabla.sort_values(["pts","dg","gf","nombre"], ascending=[False, False, False, True])
+             .reset_index(drop=True)
+    )
+    tabla.insert(0, "pos", tabla.index+1)
     return tabla[["pos","nombre","pj","pg","pe","pp","gf","ga","dg","pts","escudo_url"]]
 
 teams, matches = load_data()
 
+# ── Encabezado ──────────────────────────────────────────────────────────────────
 st.markdown(
     """
     <div style="display:flex; align-items:center; gap:12px;">
@@ -88,46 +95,34 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
+# ── Tabs ────────────────────────────────────────────────────────────────────────
 tabs = st.tabs(["Tabla", "Fixture", "Campeones", "Estadísticas", "Historia de Clubes", "Simuladores"])
 
 with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
-
     tabla = compute_standings(matches, teams).copy()
 
-    # --- DEBUG mínimo y vista previa de escudos (confirmar que se leen) ---
+    # Vista previa rápida (puede borrarse cuando confirmes)
     st.caption("Vista previa de escudos (debug rápido)")
     c1, c2, c3, c4 = st.columns(4)
-    try:
-        c1.image(str(resolve_path("assets/logos/river.png")), width=48, caption="river.png")
-    except Exception as e:
-        c1.write(f"river.png ❌ {e}")
-    try:
-        c2.image(str(resolve_path("assets/logos/boca.png")), width=48, caption="boca.png")
-    except Exception as e:
-        c2.write(f"boca.png ❌ {e}")
-    try:
-        c3.image(str(resolve_path("assets/logos/independiente.png")), width=48, caption="independiente.png")
-    except Exception as e:
-        c3.write(f"independiente.png ❌ {e}")
-    try:
-        c4.image(str(resolve_path("assets/logos/racing.png")), width=48, caption="racing.png")
-    except Exception as e:
-        c4.write(f"racing.png ❌ {e}")
+    for col, name in zip(
+        (c1, c2, c3, c4),
+        ("river.png","boca.png","independiente.png","racing.png")
+    ):
+        try:
+            col.image(str(resolve_path(f"assets/logos/{name}")), width=48, caption=name)
+        except Exception as e:
+            col.write(f"{name} ❌ {e}")
 
     st.divider()
 
-    # 2) Convertir rutas en <img>
+    # Escudos embebidos (funciona con URL o ruta local)
     tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
         lambda p: f'<img src="{img_src(p)}" height="24">' if p else "—"
     )
 
-    # 3) Renderizar tabla con HTML
     cols = ["pos","nombre","Escudo","pj","pg","pe","pp","gf","ga","dg","pts"]
     st.markdown(tabla[cols].to_html(escape=False, index=False), unsafe_allow_html=True)
-
-
 
 with tabs[1]:
     st.subheader("Fixture")
@@ -144,9 +139,10 @@ with tabs[3]:
 with tabs[4]:
     st.subheader("Historia de Clubes")
     equipo = st.selectbox("Elegí club", teams["nombre"].tolist())
-    row = teams[teams["nombre"]==equipo].iloc[0]
+    row = teams[teams["nombre"] == equipo].iloc[0]
     st.markdown(f"### {row['nombre']}")
-    st.image(row["escudo_url"], width=80)
+    # Mostrar escudo del club (local o URL)
+    st.markdown(f'<img src="{img_src(row["escudo_url"])}" height="80">', unsafe_allow_html=True)
     st.info("Acá va palmarés, ídolos, campañas históricas, etc.")
 
 with tabs[5]:
