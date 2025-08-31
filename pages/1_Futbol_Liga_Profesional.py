@@ -102,7 +102,7 @@ with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
     tabla = compute_standings(matches, teams).copy()
 
-    # Escudo + nombre juntos (una sola línea de HTML para evitar \n)
+    # Escudo + nombre juntos
     tabla["Equipo"] = tabla.apply(
         lambda r: (
             f'<div style="display:flex;align-items:center;gap:8px;">'
@@ -113,10 +113,27 @@ with tabs[0]:
         axis=1
     )
 
-    # Render con 'Equipo' (no mostramos 'nombre' ni 'escudo_url')
-    cols = ["pos", "Equipo", "pj", "pg", "pe", "pp", "gf", "ga", "dg", "pts"]
+    # Columnas con encabezados en mayúsculas
+    tabla = tabla.rename(columns={
+        "pos": "POS",
+        "pj": "PJ",
+        "pg": "PG",
+        "pe": "PE",
+        "pp": "PP",
+        "gf": "GF",
+        "ga": "GC",  # GA → GC (goles en contra)
+        "dg": "DG",
+        "pts": "PTS"
+    })
+
+    # Render con estilos extra
+    cols = ["POS", "Equipo", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "PTS"]
     st.markdown(
-        tabla[cols].to_html(escape=False, index=False),
+        tabla[cols].to_html(
+            escape=False,
+            index=False,
+            justify="center"  # centra el resto
+        ).replace('<th>Equipo</th>', '<th style="text-align:left;">Equipo</th>'),
         unsafe_allow_html=True
     )
 
