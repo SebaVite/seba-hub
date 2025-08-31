@@ -102,13 +102,24 @@ with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
     tabla = compute_standings(matches, teams).copy()
 
-    # Escudos embebidos (funciona con URL o ruta local)
-    tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
-        lambda p: f'<img src="{img_src(p)}" height="24">' if p else "—"
-    )
+   # Escudo + nombre juntos (estilo Promiedos)
+tabla["Equipo"] = tabla.apply(
+    lambda r: f'''
+      <div style="display:flex; align-items:center; gap:8px;">
+        <img src="{img_src(r["escudo_url"])}" height="18">
+        <span>{r["nombre"]}</span>
+      </div>
+    ''',
+    axis=1
+)
 
-    cols = ["pos","nombre","Escudo","pj","pg","pe","pp","gf","ga","dg","pts"]
-    st.markdown(tabla[cols].to_html(escape=False, index=False), unsafe_allow_html=True)
+# Render con 'Equipo' (y ocultamos 'nombre' y 'escudo_url' de la vista)
+cols = ["pos", "Equipo", "pj", "pg", "pe", "pp", "gf", "ga", "dg", "pts"]
+st.markdown(
+    tabla[cols].to_html(escape=False, index=False),
+    unsafe_allow_html=True
+)
+
 
 with tabs[1]:
     st.subheader("Fixture")
