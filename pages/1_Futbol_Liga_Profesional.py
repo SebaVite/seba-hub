@@ -102,20 +102,6 @@ with tabs[0]:
     st.subheader("Tabla (auto-actualizable)")
     tabla = compute_standings(matches, teams).copy()
 
-    # Vista previa rápida (puede borrarse cuando confirmes)
-    st.caption("Vista previa de escudos (debug rápido)")
-    c1, c2, c3, c4 = st.columns(4)
-    for col, name in zip(
-        (c1, c2, c3, c4),
-        ("river.png","boca.png","independiente.png","racing.png")
-    ):
-        try:
-            col.image(str(resolve_path(f"assets/logos/{name}")), width=48, caption=name)
-        except Exception as e:
-            col.write(f"{name} ❌ {e}")
-
-    st.divider()
-
     # Escudos embebidos (funciona con URL o ruta local)
     tabla["Escudo"] = tabla["escudo_url"].astype(str).apply(
         lambda p: f'<img src="{img_src(p)}" height="24">' if p else "—"
