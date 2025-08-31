@@ -2,6 +2,20 @@
 import streamlit as st
 import pandas as pd
 
+import base64, os
+
+def img_to_data_uri(path: str) -> str:
+    """Lee un PNG/JPG local y devuelve un data URI para <img src="...">"""
+    try:
+        with open(path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+        ext = os.path.splitext(path)[1].lower()
+        mime = "image/png" if ext == ".png" else "image/jpeg"
+        return f"data:{mime};base64,{b64}"
+    except Exception:
+        return ""  # si falta el archivo, queda vacío
+
+
 st.set_page_config(page_title="Liga Profesional", layout="wide")
 
 @st.cache_data
