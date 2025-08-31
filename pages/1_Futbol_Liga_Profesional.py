@@ -8,7 +8,7 @@ from pathlib import Path
 
 if st.button("🔄 Refrescar datos"):
     st.cache_data.clear()
-    st.experimental_rerun()
+    st.rerun()
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # raíz del repo
 
